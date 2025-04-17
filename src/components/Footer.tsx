@@ -1,5 +1,5 @@
 
-import { Paw, Heart, Mail, MapPin, Phone } from "lucide-react";
+import { Dog, Heart, Mail, MapPin, Phone } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Footer = () => {
@@ -9,7 +9,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <div className="flex items-center">
-              <Paw className="h-8 w-8" />
+              <Dog className="h-8 w-8" />
               <span className="ml-2 text-xl font-bold">PawPal Match</span>
             </div>
             <p className="mt-2 text-sm text-white/80">

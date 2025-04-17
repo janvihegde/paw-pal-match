@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Paw } from "lucide-react";
+import { Menu, X, Dog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Navbar = () => {
@@ -13,7 +13,7 @@ const Navbar = () => {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center">
-              <Paw className="h-8 w-8 text-pawblue-500" />
+              <Dog className="h-8 w-8 text-pawblue-500" />
               <span className="ml-2 text-xl font-bold text-pawblue-500">PawPal Match</span>
             </Link>
           </div>

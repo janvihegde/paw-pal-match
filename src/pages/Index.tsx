@@ -2,11 +2,11 @@
 import Hero from "@/components/Hero";
 import FeaturedPets from "@/components/FeaturedPets";
 import AdoptionSteps from "@/components/AdoptionSteps";
-import { Heart, Paw, ShieldCheck, Users } from "lucide-react";
+import { Heart, Dog, ShieldCheck, Users } from "lucide-react";
 
 const stats = [
   {
-    icon: Paw,
+    icon: Dog,
     title: "200+ Pets",
     description: "Looking for a home right now"
   },
