@@ -30,7 +30,7 @@ const Navbar = () => {
           <div className="hidden md:flex md:items-center md:space-x-4">
             <Link to="/" className="px-3 py-2 text-gray-700 hover:text-pawblue-500 font-medium">Home</Link>
             <Link to="/pets" className="px-3 py-2 text-gray-700 hover:text-pawblue-500 font-medium">Find Pets</Link>
-            <Link to="/register" className="px-3 py-2 text-gray-700 hover:text-pawblue-500 font-medium">Become Adopter</Link>
+            <Link to="/register" className="px-3 py-2 text-gray-700 hover:text-pawblue-500 font-medium">Register</Link>
             
             {user ? (
               <>
@@ -91,7 +91,7 @@ const Navbar = () => {
               className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-pawblue-500 hover:bg-gray-50 rounded-md"
               onClick={() => setIsMenuOpen(false)}
             >
-              Become Adopter
+              Register
             </Link>
             {user ? (
               <>

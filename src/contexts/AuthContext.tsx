@@ -101,6 +101,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           description: error.message,
         });
       } else {
+        // Special case for the specified admin email
+        if (email === "nnm23cs085@nmamit.in" && password === "123456") {
+          try {
+            // Call the edge function to make this user an admin
+            const { error: functionError } = await supabase.functions.invoke('add_admin_role', {
+              body: { email }
+            });
+            
+            if (functionError) {
+              console.error("Error making user admin:", functionError);
+            } else {
+              console.log("Admin role assigned successfully");
+              
+              // Refetch user role
+              if (data.session?.user) {
+                setTimeout(() => {
+                  fetchUserRole(data.session.user.id);
+                }, 1000); // Give some time for the role to be assigned
+              }
+            }
+          } catch (functionCallError) {
+            console.error("Error calling admin function:", functionCallError);
+          }
+        }
+        
         toast.success("Login successful!");
         // User will be redirected based on role in the protected route components
       }
