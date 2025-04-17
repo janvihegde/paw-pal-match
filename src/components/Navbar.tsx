@@ -3,9 +3,11 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X, Dog } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState(supabase.auth.getUser());
 
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-30">
@@ -23,11 +25,22 @@ const Navbar = () => {
             <Link to="/" className="px-3 py-2 text-gray-700 hover:text-pawblue-500 font-medium">Home</Link>
             <Link to="/pets" className="px-3 py-2 text-gray-700 hover:text-pawblue-500 font-medium">Find Pets</Link>
             <Link to="/register" className="px-3 py-2 text-gray-700 hover:text-pawblue-500 font-medium">Become Adopter</Link>
-            <Link to="/admin">
-              <Button variant="outline" className="ml-4">
-                Admin Portal
-              </Button>
-            </Link>
+            
+            {user ? (
+              <>
+                <Link to="/user/applications" className="px-3 py-2 text-gray-700 hover:text-pawblue-500 font-medium">My Applications</Link>
+                <Button 
+                  variant="destructive" 
+                  onClick={() => supabase.auth.signOut()}
+                >
+                  Log Out
+                </Button>
+              </>
+            ) : (
+              <Link to="/login">
+                <Button variant="outline">Login</Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -71,13 +84,34 @@ const Navbar = () => {
             >
               Become Adopter
             </Link>
-            <Link 
-              to="/admin" 
-              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-pawblue-500 hover:bg-gray-50 rounded-md"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Admin Portal
-            </Link>
+            {user ? (
+              <>
+                <Link 
+                  to="/user/applications" 
+                  className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-pawblue-500 hover:bg-gray-50 rounded-md"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  My Applications
+                </Link>
+                <button 
+                  className="block w-full text-left px-3 py-2 text-base font-medium text-red-700 hover:bg-gray-50 rounded-md"
+                  onClick={() => {
+                    supabase.auth.signOut();
+                    setIsMenuOpen(false);
+                  }}
+                >
+                  Log Out
+                </button>
+              </>
+            ) : (
+              <Link 
+                to="/login" 
+                className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-pawblue-500 hover:bg-gray-50 rounded-md"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Login
+              </Link>
+            )}
           </div>
         </div>
       )}

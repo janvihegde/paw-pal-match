@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Pets from "./pages/Pets";
 import PetDetail from "./pages/PetDetail";
 import Register from "./pages/Register";
+import Login from "./pages/Login";
 import Admin from "./pages/Admin";
 import UserPortal from "./pages/UserPortal";
 import NotFound from "./pages/NotFound";
@@ -30,6 +31,7 @@ const App = () => (
               <Route path="/pets" element={<Pets />} />
               <Route path="/pets/:id" element={<PetDetail />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/login" element={<Login />} />
               <Route path="/admin" element={<Admin />} />
               <Route path="/user/*" element={<UserPortal />} />
               <Route path="*" element={<NotFound />} />
