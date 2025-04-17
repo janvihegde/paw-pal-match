@@ -11,6 +11,7 @@ import Pets from "./pages/Pets";
 import PetDetail from "./pages/PetDetail";
 import Register from "./pages/Register";
 import Admin from "./pages/Admin";
+import UserPortal from "./pages/UserPortal";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
               <Route path="/pets/:id" element={<PetDetail />} />
               <Route path="/register" element={<Register />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/user/*" element={<UserPortal />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
