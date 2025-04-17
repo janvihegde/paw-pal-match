@@ -1,8 +1,9 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -14,8 +15,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const loginFormSchema = z.object({
   email: z.string().email({
@@ -31,6 +31,7 @@ type LoginFormValues = z.infer<typeof loginFormSchema>;
 const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const { signIn, user, isAdmin } = useAuth();
   
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
@@ -39,28 +40,22 @@ const Login = () => {
       password: "",
     },
   });
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      if (isAdmin) {
+        navigate("/admin");
+      } else {
+        navigate("/user/applications");
+      }
+    }
+  }, [user, isAdmin, navigate]);
   
   const onSubmit = async (values: LoginFormValues) => {
     try {
       setIsSubmitting(true);
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: values.email,
-        password: values.password,
-      });
-      
-      if (error) {
-        toast.error("Login failed", {
-          description: error.message,
-        });
-      } else {
-        toast.success("Login successful!");
-        navigate("/user/applications");
-      }
-    } catch (error) {
-      toast.error("Login failed", {
-        description: "An unexpected error occurred. Please try again.",
-      });
+      await signIn(values.email, values.password);
     } finally {
       setIsSubmitting(false);
     }

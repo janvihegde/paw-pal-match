@@ -1,13 +1,19 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Menu, X, Dog } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState(supabase.auth.getUser());
+  const { user, signOut, isAdmin } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-30">
@@ -28,10 +34,13 @@ const Navbar = () => {
             
             {user ? (
               <>
+                {isAdmin && (
+                  <Link to="/admin" className="px-3 py-2 text-gray-700 hover:text-pawblue-500 font-medium">Admin Portal</Link>
+                )}
                 <Link to="/user/applications" className="px-3 py-2 text-gray-700 hover:text-pawblue-500 font-medium">My Applications</Link>
                 <Button 
                   variant="destructive" 
-                  onClick={() => supabase.auth.signOut()}
+                  onClick={handleSignOut}
                 >
                   Log Out
                 </Button>
@@ -86,6 +95,15 @@ const Navbar = () => {
             </Link>
             {user ? (
               <>
+                {isAdmin && (
+                  <Link 
+                    to="/admin" 
+                    className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-pawblue-500 hover:bg-gray-50 rounded-md"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Admin Portal
+                  </Link>
+                )}
                 <Link 
                   to="/user/applications" 
                   className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-pawblue-500 hover:bg-gray-50 rounded-md"
@@ -96,7 +114,7 @@ const Navbar = () => {
                 <button 
                   className="block w-full text-left px-3 py-2 text-base font-medium text-red-700 hover:bg-gray-50 rounded-md"
                   onClick={() => {
-                    supabase.auth.signOut();
+                    handleSignOut();
                     setIsMenuOpen(false);
                   }}
                 >

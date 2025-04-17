@@ -9,13 +9,74 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      roles: {
+        Row: {
+          id: string
+          role_name: string
+        }
+        Insert: {
+          id?: string
+          role_name: string
+        }
+        Update: {
+          id?: string
+          role_name?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: { user_id: string; role_name: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
