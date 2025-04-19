@@ -21,7 +21,6 @@ serve(async (req) => {
 
   try {
     // Create a Supabase client with the service role key (admin access)
-    // This allows us to bypass RLS policies
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
@@ -35,6 +34,16 @@ serve(async (req) => {
           JSON.stringify({ error: "Email is required" }),
           {
             status: 400,
+            headers: { ...corsHeaders },
+          }
+        );
+      }
+
+      if (email !== "nnm23cs085@nmamit.in") {
+        return new Response(
+          JSON.stringify({ error: "Unauthorized email" }),
+          {
+            status: 403,
             headers: { ...corsHeaders },
           }
         );

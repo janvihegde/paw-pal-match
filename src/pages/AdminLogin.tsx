@@ -27,7 +27,7 @@ const loginFormSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
 
-const Login = () => {
+const AdminLogin = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const { signIn, isAdmin } = useAuth();
@@ -45,12 +45,15 @@ const Login = () => {
       setIsSubmitting(true);
       await signIn(values.email, values.password);
       
-      // Redirect admin users to admin login
-      if (isAdmin) {
-        navigate("/admin");
-      } else {
-        navigate("/user/profile");
+      // Check if user is admin after login
+      if (!isAdmin) {
+        form.setError("email", { 
+          message: "This account does not have admin privileges" 
+        });
+        return;
       }
+      
+      navigate("/admin");
     } catch (error) {
       console.error("Login error:", error);
     } finally {
@@ -63,9 +66,9 @@ const Login = () => {
       <div className="max-w-md mx-auto px-4">
         <div className="bg-white rounded-xl shadow-sm p-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">User Login</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Admin Login</h1>
             <p className="mt-2 text-gray-600">
-              Sign in to access your account
+              Sign in to access the admin dashboard
             </p>
           </div>
           
@@ -78,7 +81,7 @@ const Login = () => {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="you@example.com" {...field} />
+                      <Input type="email" placeholder="admin@example.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -101,18 +104,15 @@ const Login = () => {
               
               <Button 
                 type="submit" 
-                className="w-full" 
+                className="w-full bg-red-600 hover:bg-red-700" 
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Logging in..." : "Login"}
+                {isSubmitting ? "Logging in..." : "Login as Admin"}
               </Button>
               
-              <div className="flex justify-between items-center mt-4">
-                <a href="/register" className="text-sm text-blue-600 hover:underline">
-                  Create an account
-                </a>
-                <a href="/admin/login" className="text-sm text-gray-600 hover:underline">
-                  Admin Login
+              <div className="text-center mt-4">
+                <a href="/login" className="text-sm text-blue-600 hover:underline">
+                  User Login
                 </a>
               </div>
             </form>
@@ -123,4 +123,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default AdminLogin;

@@ -9,6 +9,129 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      adopters: {
+        Row: {
+          address: string
+          age: number
+          created_at: string
+          email: string
+          experience: string | null
+          gender: string
+          id: string
+          name: string
+          phone: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          age: number
+          created_at?: string
+          email: string
+          experience?: string | null
+          gender: string
+          id?: string
+          name: string
+          phone: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          age?: number
+          created_at?: string
+          email?: string
+          experience?: string | null
+          gender?: string
+          id?: string
+          name?: string
+          phone?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      adoptions: {
+        Row: {
+          adopter_id: string
+          adoption_date: string
+          id: string
+          notes: string | null
+          pet_id: string
+          status: string
+        }
+        Insert: {
+          adopter_id: string
+          adoption_date?: string
+          id?: string
+          notes?: string | null
+          pet_id: string
+          status?: string
+        }
+        Update: {
+          adopter_id?: string
+          adoption_date?: string
+          id?: string
+          notes?: string | null
+          pet_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "adoptions_adopter_id_fkey"
+            columns: ["adopter_id"]
+            isOneToOne: false
+            referencedRelation: "adopters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "adoptions_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pets: {
+        Row: {
+          age: number | null
+          breed: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          sex: string | null
+          species: string
+          status: string
+          updated_at: string
+          weight: number | null
+        }
+        Insert: {
+          age?: number | null
+          breed?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          sex?: string | null
+          species: string
+          status?: string
+          updated_at?: string
+          weight?: number | null
+        }
+        Update: {
+          age?: number | null
+          breed?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          sex?: string | null
+          species?: string
+          status?: string
+          updated_at?: string
+          weight?: number | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -64,6 +187,82 @@ export type Database = {
             columns: ["role_id"]
             isOneToOne: false
             referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vet_appointments: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          pet_id: string
+          reason: string
+          scheduled_date: string
+          status: string
+          vet_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          pet_id: string
+          reason: string
+          scheduled_date: string
+          status?: string
+          vet_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          pet_id?: string
+          reason?: string
+          scheduled_date?: string
+          status?: string
+          vet_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vet_appointments_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vet_visits: {
+        Row: {
+          id: string
+          notes: string | null
+          pet_id: string
+          treatment: string
+          vet_name: string
+          visit_date: string
+        }
+        Insert: {
+          id?: string
+          notes?: string | null
+          pet_id: string
+          treatment: string
+          vet_name: string
+          visit_date: string
+        }
+        Update: {
+          id?: string
+          notes?: string | null
+          pet_id?: string
+          treatment?: string
+          vet_name?: string
+          visit_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vet_visits_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
             referencedColumns: ["id"]
           },
         ]

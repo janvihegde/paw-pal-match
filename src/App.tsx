@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminRoute } from "@/components/AdminRoute";
@@ -14,6 +14,7 @@ import Pets from "./pages/Pets";
 import PetDetail from "./pages/PetDetail";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
+import AdminLogin from "./pages/AdminLogin";
 import Admin from "./pages/Admin";
 import UserPortal from "./pages/UserPortal";
 import NotFound from "./pages/NotFound";
@@ -37,6 +38,7 @@ const App = () => (
                 <Route path="/pets/:id" element={<PetDetail />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/admin/login" element={<AdminLogin />} />
                 
                 {/* Protected user routes */}
                 <Route element={<ProtectedRoute />}>
