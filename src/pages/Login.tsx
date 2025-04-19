@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -31,79 +31,29 @@ type LoginFormValues = z.infer<typeof loginFormSchema>;
 
 const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [emailConfirmRequired, setEmailConfirmRequired] = useState(false);
   const navigate = useNavigate();
-  const { signIn, isAdmin, user } = useAuth();
+  const { signIn } = useAuth();
   
-  // Redirect if already logged in
-  useEffect(() => {
-    if (user) {
-      if (isAdmin) {
-        navigate("/admin");
-      } else {
-        navigate("/user/profile");
-      }
-    }
-  }, [user, isAdmin, navigate]);
+  // Check URL params for email
+  const urlParams = new URLSearchParams(window.location.search);
+  const emailFromParams = urlParams.get('email') || "";
   
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
-      email: "",
+      email: emailFromParams,
       password: "",
     },
   });
 
-  const resendConfirmationEmail = async (email: string) => {
-    try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: email,
-      });
-      
-      if (error) {
-        toast.error("Failed to resend confirmation email", {
-          description: error.message
-        });
-      } else {
-        toast.success("Confirmation email sent", {
-          description: "Please check your inbox and follow the link to verify your account."
-        });
-      }
-    } catch (error) {
-      console.error("Error resending confirmation:", error);
-      toast.error("Failed to resend confirmation email");
-    }
-  };
-
   const onSubmit = async (values: LoginFormValues) => {
     try {
       setIsSubmitting(true);
-      setEmailConfirmRequired(false);
       
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: values.email,
-        password: values.password,
-      });
-      
-      if (authError) {
-        console.log("Auth error:", authError);
-        if (authError.message === "Email not confirmed") {
-          setEmailConfirmRequired(true);
-          form.setError("email", { 
-            message: "Please verify your email before logging in" 
-          });
-          return;
-        }
-        
-        form.setError("email", { message: authError.message });
-        return;
-      }
-      
-      // If successful, call our signIn method to update context
+      // Simply try to sign in with the credentials
       await signIn(values.email, values.password);
       
-      // Navigation will be handled by the useEffect based on isAdmin
+      // Navigation will be handled by the AuthContext
     } catch (error) {
       console.error("Login error:", error);
     } finally {
@@ -152,23 +102,6 @@ const Login = () => {
                 )}
               />
               
-              {emailConfirmRequired && (
-                <div className="text-center">
-                  <p className="text-sm text-amber-600 mb-2">
-                    Please verify your email before logging in
-                  </p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => resendConfirmationEmail(form.getValues("email"))}
-                    className="w-full"
-                  >
-                    Resend confirmation email
-                  </Button>
-                </div>
-              )}
-              
               <Button 
                 type="submit" 
                 className="w-full" 
@@ -185,6 +118,14 @@ const Login = () => {
                   Admin Login
                 </a>
               </div>
+
+              {form.getValues("email") === "nnm23cs085@nmamit.in" && (
+                <div className="mt-4 p-3 bg-gray-100 rounded-md">
+                  <p className="text-sm text-gray-700">
+                    <strong>Note:</strong> For admin login, use email: nnm23cs085@nmamit.in with password: 123456
+                  </p>
+                </div>
+              )}
             </form>
           </Form>
         </div>

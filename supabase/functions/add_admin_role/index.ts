@@ -50,11 +50,13 @@ serve(async (req) => {
         );
       }
 
+      console.log("Attempting to assign admin role for email:", email);
+
       // Find the user by email
-      const { data: userData, error: userError } = await supabaseClient.auth.admin.listUsers();
+      const { data: usersData, error: usersError } = await supabaseClient.auth.admin.listUsers();
       
-      if (userError) {
-        console.error("Error listing users:", userError);
+      if (usersError) {
+        console.error("Error listing users:", usersError);
         return new Response(
           JSON.stringify({ error: "Failed to find users" }),
           {
@@ -65,10 +67,10 @@ serve(async (req) => {
       }
       
       // Find our admin user
-      const adminUser = userData.users.find(u => u.email === email);
+      const adminUser = usersData.users.find(u => u.email === email);
       
       if (!adminUser) {
-        console.error("Admin user not found");
+        console.error("Admin user not found with email:", email);
         return new Response(
           JSON.stringify({ error: "Admin user not found" }),
           {
@@ -78,7 +80,7 @@ serve(async (req) => {
         );
       }
       
-      console.log("Found admin user:", adminUser.id);
+      console.log("Found admin user with ID:", adminUser.id);
 
       // Get the admin role id
       const { data: roles, error: roleError } = await supabaseClient
@@ -126,13 +128,12 @@ serve(async (req) => {
         .from("user_roles")
         .insert([
           { user_id: adminUser.id, role_id: adminRoleId }
-        ])
-        .select();
+        ]);
 
       if (insertError) {
         console.error("Error assigning admin role:", insertError);
         return new Response(
-          JSON.stringify({ error: "Failed to assign admin role" }),
+          JSON.stringify({ error: "Failed to assign admin role", details: insertError.message }),
           {
             status: 500,
             headers: { ...corsHeaders },
@@ -140,7 +141,7 @@ serve(async (req) => {
         );
       }
 
-      console.log("Admin role assigned successfully:", insertData);
+      console.log("Admin role assigned successfully");
       return new Response(
         JSON.stringify({ 
           message: "Admin role assigned successfully",
@@ -164,7 +165,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("Unexpected error:", error);
     return new Response(
-      JSON.stringify({ error: "Internal server error" }),
+      JSON.stringify({ error: "Internal server error", details: String(error) }),
       {
         status: 500,
         headers: { ...corsHeaders },

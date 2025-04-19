@@ -59,20 +59,24 @@ const Register = () => {
         throw error;
       }
 
-      // Automatically confirm user if it's our test admin account
+      // For admin account, make special handling
       if (values.email === "nnm23cs085@nmamit.in") {
-        toast.success("Admin account created!", {
-          description: "You can now log in with your credentials.",
+        // Call the edge function to assign admin role
+        const { error: functionError } = await supabase.functions.invoke('add_admin_role', {
+          body: { email: values.email }
         });
-        setRegistrationComplete(true);
-        setTimeout(() => {
-          navigate("/admin/login");
-        }, 2000);
+        
+        if (functionError) {
+          console.error("Error assigning admin role:", functionError);
+        }
+        
+        toast.success("Admin account created!");
+        // Redirect to admin login with email prefilled
+        navigate(`/admin/login?email=${encodeURIComponent(values.email)}`);
       } else {
-        toast.success("Registration successful!", {
-          description: "Please check your email to verify your account.",
-        });
-        setRegistrationComplete(true);
+        toast.success("Registration successful!");
+        // Redirect to regular login with email prefilled
+        navigate(`/login?email=${encodeURIComponent(values.email)}`);
       }
     } catch (error: any) {
       toast.error("Registration failed", {
@@ -80,34 +84,6 @@ const Register = () => {
       });
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const resendConfirmationEmail = async () => {
-    try {
-      const email = form.getValues("email");
-      if (!email) {
-        toast.error("Email is required to resend confirmation");
-        return;
-      }
-      
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: email,
-      });
-      
-      if (error) {
-        toast.error("Failed to resend confirmation email", {
-          description: error.message
-        });
-      } else {
-        toast.success("Confirmation email sent", {
-          description: "Please check your inbox and follow the link to verify your account."
-        });
-      }
-    } catch (error) {
-      console.error("Error resending confirmation:", error);
-      toast.error("Failed to resend confirmation email");
     }
   };
 
@@ -122,93 +98,73 @@ const Register = () => {
             </p>
           </div>
           
-          {registrationComplete ? (
-            <div className="text-center">
-              <div className="mb-6 p-4 bg-green-50 text-green-700 rounded-lg">
-                <p className="font-medium">Registration successful!</p>
-                <p className="mt-2">Please check your email to verify your account.</p>
-              </div>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="you@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
               <Button 
-                type="button" 
-                variant="outline" 
-                onClick={resendConfirmationEmail}
-                className="mb-4"
+                type="submit" 
+                className="w-full" 
+                disabled={isSubmitting}
               >
-                Resend confirmation email
+                {isSubmitting ? "Creating account..." : "Create Account"}
               </Button>
               
-              <div>
-                <Button 
-                  type="button" 
-                  onClick={() => navigate("/login")}
-                  className="w-full"
-                >
-                  Go to Login
-                </Button>
+              <div className="text-center mt-4">
+                <a href="/login" className="text-sm text-blue-600 hover:underline">
+                  Already have an account? Login
+                </a>
               </div>
-            </div>
-          ) : (
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="you@example.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input type="password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="confirmPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Confirm Password</FormLabel>
-                      <FormControl>
-                        <Input type="password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <Button 
-                  type="submit" 
-                  className="w-full" 
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Creating account..." : "Create Account"}
-                </Button>
-                
-                <div className="text-center mt-4">
-                  <a href="/login" className="text-sm text-blue-600 hover:underline">
-                    Already have an account? Login
-                  </a>
+
+              {form.getValues("email") === "nnm23cs085@nmamit.in" && (
+                <div className="mt-4 p-3 bg-gray-100 rounded-md">
+                  <p className="text-sm text-gray-700">
+                    <strong>Note:</strong> Admin accounts use email: nnm23cs085@nmamit.in
+                  </p>
                 </div>
-              </form>
-            </Form>
-          )}
+              )}
+            </form>
+          </Form>
         </div>
       </div>
     </div>
