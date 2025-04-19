@@ -14,9 +14,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/sonner";
 
 const loginFormSchema = z.object({
   email: z.string().email({
@@ -32,9 +30,7 @@ type LoginFormValues = z.infer<typeof loginFormSchema>;
 const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
-  const { signIn } = useAuth();
   
-  // Check URL params for email
   const urlParams = new URLSearchParams(window.location.search);
   const emailFromParams = urlParams.get('email') || "";
   
@@ -50,10 +46,37 @@ const Login = () => {
     try {
       setIsSubmitting(true);
       
-      // Simply try to sign in with the credentials
-      await signIn(values.email, values.password);
+      // First try admin login
+      const adminResult = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
+
+      if (adminResult.data.user) {
+        // Check if user is admin
+        const { data: isAdmin } = await supabase.rpc('has_role', { 
+          user_id: adminResult.data.user.id, 
+          role_name: 'admin' 
+        });
+
+        if (isAdmin) {
+          navigate('/admin');
+          return;
+        }
+      }
+
+      // If not admin, check regular users table
+      const { data: user } = await supabase
+        .from('users')
+        .select()
+        .eq('email', values.email)
+        .eq('password', values.password)
+        .single();
+
+      if (user) {
+        navigate('/');
+      }
       
-      // Navigation will be handled by the AuthContext
     } catch (error) {
       console.error("Login error:", error);
     } finally {
@@ -118,14 +141,6 @@ const Login = () => {
                   Admin Login
                 </a>
               </div>
-
-              {form.getValues("email") === "nnm23cs085@nmamit.in" && (
-                <div className="mt-4 p-3 bg-gray-100 rounded-md">
-                  <p className="text-sm text-gray-700">
-                    <strong>Note:</strong> For admin login, use email: nnm23cs085@nmamit.in with password: 123456
-                  </p>
-                </div>
-              )}
             </form>
           </Form>
         </div>

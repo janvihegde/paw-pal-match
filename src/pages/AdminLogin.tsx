@@ -14,7 +14,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/sonner";
 
 const loginFormSchema = z.object({
@@ -31,16 +31,14 @@ type LoginFormValues = z.infer<typeof loginFormSchema>;
 const AdminLogin = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
-  const { signIn } = useAuth();
   
-  // Check URL params for email
   const urlParams = new URLSearchParams(window.location.search);
   const emailFromParams = urlParams.get('email') || "";
   
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
-      email: emailFromParams || "nnm23cs085@nmamit.in", // Default to admin email
+      email: emailFromParams || "nnm23cs085@nmamit.in",
       password: "",
     },
   });
@@ -49,16 +47,31 @@ const AdminLogin = () => {
     try {
       setIsSubmitting(true);
       
-      // Try to sign in with credentials
-      await signIn(values.email, values.password);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
+
+      if (error) {
+        toast.error("Admin login failed");
+        return;
+      }
+
+      if (data.user) {
+        // Check if user is admin
+        const { data: isAdmin } = await supabase.rpc('has_role', { 
+          user_id: data.user.id, 
+          role_name: 'admin' 
+        });
+
+        if (isAdmin) {
+          toast.success("Successfully logged in as admin");
+          navigate('/admin');
+        } else {
+          toast.error("Not authorized as admin");
+        }
+      }
       
-      // Navigation is handled in AuthContext based on role
-      toast.success("Logging in as admin...");
-      
-      // Force reload after a delay to ensure admin role is applied
-      setTimeout(() => {
-        window.location.href = "/admin";
-      }, 1500);
     } catch (error) {
       console.error("Login error:", error);
       toast.error("Admin login failed");
