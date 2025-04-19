@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/sonner";
 
 const loginFormSchema = z.object({
   email: z.string().email({
@@ -29,8 +31,20 @@ type LoginFormValues = z.infer<typeof loginFormSchema>;
 
 const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [emailConfirmRequired, setEmailConfirmRequired] = useState(false);
   const navigate = useNavigate();
-  const { signIn, isAdmin } = useAuth();
+  const { signIn, isAdmin, user } = useAuth();
+  
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      if (isAdmin) {
+        navigate("/admin");
+      } else {
+        navigate("/user/profile");
+      }
+    }
+  }, [user, isAdmin, navigate]);
   
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
@@ -40,17 +54,56 @@ const Login = () => {
     },
   });
 
+  const resendConfirmationEmail = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+      });
+      
+      if (error) {
+        toast.error("Failed to resend confirmation email", {
+          description: error.message
+        });
+      } else {
+        toast.success("Confirmation email sent", {
+          description: "Please check your inbox and follow the link to verify your account."
+        });
+      }
+    } catch (error) {
+      console.error("Error resending confirmation:", error);
+      toast.error("Failed to resend confirmation email");
+    }
+  };
+
   const onSubmit = async (values: LoginFormValues) => {
     try {
       setIsSubmitting(true);
+      setEmailConfirmRequired(false);
+      
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
+      
+      if (authError) {
+        console.log("Auth error:", authError);
+        if (authError.message === "Email not confirmed") {
+          setEmailConfirmRequired(true);
+          form.setError("email", { 
+            message: "Please verify your email before logging in" 
+          });
+          return;
+        }
+        
+        form.setError("email", { message: authError.message });
+        return;
+      }
+      
+      // If successful, call our signIn method to update context
       await signIn(values.email, values.password);
       
-      // Redirect admin users to admin login
-      if (isAdmin) {
-        navigate("/admin");
-      } else {
-        navigate("/user/profile");
-      }
+      // Navigation will be handled by the useEffect based on isAdmin
     } catch (error) {
       console.error("Login error:", error);
     } finally {
@@ -98,6 +151,23 @@ const Login = () => {
                   </FormItem>
                 )}
               />
+              
+              {emailConfirmRequired && (
+                <div className="text-center">
+                  <p className="text-sm text-amber-600 mb-2">
+                    Please verify your email before logging in
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => resendConfirmationEmail(form.getValues("email"))}
+                    className="w-full"
+                  >
+                    Resend confirmation email
+                  </Button>
+                </div>
+              )}
               
               <Button 
                 type="submit" 

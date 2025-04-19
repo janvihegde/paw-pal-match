@@ -39,6 +39,7 @@ serve(async (req) => {
         );
       }
 
+      // For security reasons, only allow specific admin emails
       if (email !== "nnm23cs085@nmamit.in") {
         return new Response(
           JSON.stringify({ error: "Unauthorized email" }),
@@ -50,24 +51,34 @@ serve(async (req) => {
       }
 
       // Find the user by email
-      const { data: users, error: userError } = await supabaseClient
-        .from("auth.users")
-        .select("id")
-        .eq("email", email)
-        .maybeSingle();
-
-      if (userError || !users) {
-        console.error("Error finding user:", userError);
+      const { data: userData, error: userError } = await supabaseClient.auth.admin.listUsers();
+      
+      if (userError) {
+        console.error("Error listing users:", userError);
         return new Response(
-          JSON.stringify({ error: "Failed to find user" }),
+          JSON.stringify({ error: "Failed to find users" }),
+          {
+            status: 500,
+            headers: { ...corsHeaders },
+          }
+        );
+      }
+      
+      // Find our admin user
+      const adminUser = userData.users.find(u => u.email === email);
+      
+      if (!adminUser) {
+        console.error("Admin user not found");
+        return new Response(
+          JSON.stringify({ error: "Admin user not found" }),
           {
             status: 404,
             headers: { ...corsHeaders },
           }
         );
       }
-
-      const userId = users.id;
+      
+      console.log("Found admin user:", adminUser.id);
 
       // Get the admin role id
       const { data: roles, error: roleError } = await supabaseClient
@@ -88,16 +99,18 @@ serve(async (req) => {
       }
 
       const adminRoleId = roles.id;
+      console.log("Found admin role with ID:", adminRoleId);
 
       // Check if the user already has the admin role
       const { data: existingRole, error: existingRoleError } = await supabaseClient
         .from("user_roles")
         .select("id")
-        .eq("user_id", userId)
+        .eq("user_id", adminUser.id)
         .eq("role_id", adminRoleId)
         .maybeSingle();
 
       if (!existingRoleError && existingRole) {
+        console.log("User already has admin role");
         return new Response(
           JSON.stringify({ message: "User already has admin role", success: true }),
           {
@@ -108,11 +121,13 @@ serve(async (req) => {
       }
 
       // Assign admin role to the user
-      const { error: insertError } = await supabaseClient
+      console.log("Assigning admin role to user:", adminUser.id);
+      const { data: insertData, error: insertError } = await supabaseClient
         .from("user_roles")
         .insert([
-          { user_id: userId, role_id: adminRoleId }
-        ]);
+          { user_id: adminUser.id, role_id: adminRoleId }
+        ])
+        .select();
 
       if (insertError) {
         console.error("Error assigning admin role:", insertError);
@@ -125,6 +140,7 @@ serve(async (req) => {
         );
       }
 
+      console.log("Admin role assigned successfully:", insertData);
       return new Response(
         JSON.stringify({ 
           message: "Admin role assigned successfully",

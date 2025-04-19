@@ -31,6 +31,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log("Auth state change event:", event);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -44,6 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Initial session check:", session ? "Session exists" : "No session");
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -63,6 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Fetch user role separately to avoid deadlock
   const fetchUserRole = async (userId: string) => {
     try {
+      console.log("Fetching user role for user ID:", userId);
       const { data, error } = await supabase.rpc('has_role', { 
         user_id: userId, 
         role_name: 'admin' 
@@ -72,6 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.error('Error checking user role:', error);
         setIsAdmin(false);
       } else {
+        console.log("Role check result:", data);
         setIsAdmin(!!data);
         setUserRole(data ? 'admin' : 'user');
       }
@@ -91,45 +95,47 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log("Attempting sign in for:", email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error("Login error:", error);
         toast.error("Login failed", {
           description: error.message,
         });
-      } else {
-        // Special case for the specified admin email
-        if (email === "nnm23cs085@nmamit.in" && password === "123456") {
-          try {
-            // Call the edge function to make this user an admin
-            const { error: functionError } = await supabase.functions.invoke('add_admin_role', {
-              body: { email }
-            });
-            
-            if (functionError) {
-              console.error("Error making user admin:", functionError);
-            } else {
-              console.log("Admin role assigned successfully");
-              
-              // Refetch user role
-              if (data.session?.user) {
-                setTimeout(() => {
-                  fetchUserRole(data.session.user.id);
-                }, 1000); // Give some time for the role to be assigned
-              }
-            }
-          } catch (functionCallError) {
-            console.error("Error calling admin function:", functionCallError);
-          }
-        }
-        
-        toast.success("Login successful!");
-        // User will be redirected based on role in the protected route components
+        return;
       }
+      
+      // Special case for the specified admin email
+      if (email === "nnm23cs085@nmamit.in") {
+        console.log("Detected admin email login, assigning admin role");
+        try {
+          // Call the edge function to make this user an admin
+          const { data: functionData, error: functionError } = await supabase.functions.invoke('add_admin_role', {
+            body: { email }
+          });
+          
+          if (functionError) {
+            console.error("Error making user admin:", functionError);
+          } else {
+            console.log("Admin role function response:", functionData);
+            
+            // Refetch user role immediately 
+            if (data.session?.user) {
+              await fetchUserRole(data.session.user.id);
+            }
+          }
+        } catch (functionCallError) {
+          console.error("Error calling admin function:", functionCallError);
+        }
+      }
+      
+      toast.success("Login successful!");
     } catch (error) {
+      console.error("Unexpected login error:", error);
       toast.error("Login failed", {
         description: "An unexpected error occurred. Please try again.",
       });
