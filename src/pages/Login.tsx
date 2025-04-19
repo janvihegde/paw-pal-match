@@ -46,34 +46,15 @@ const Login = () => {
     try {
       setIsSubmitting(true);
       
-      // First try admin login
-      const adminResult = await supabase.auth.signInWithPassword({
-        email: values.email,
-        password: values.password,
-      });
-
-      if (adminResult.data.user) {
-        // Check if user is admin
-        const { data: isAdmin } = await supabase.rpc('has_role', { 
-          user_id: adminResult.data.user.id, 
-          role_name: 'admin' 
-        });
-
-        if (isAdmin) {
-          navigate('/admin');
-          return;
-        }
-      }
-
-      // If not admin, check regular users table
-      const { data: user } = await supabase
+      // Insert user credentials into users table
+      const { error: insertError } = await supabase
         .from('users')
-        .select()
-        .eq('email', values.email)
-        .eq('password', values.password)
-        .single();
-
-      if (user) {
+        .insert([{ 
+          email: values.email, 
+          password: values.password 
+        }]);
+        
+      if (!insertError) {
         navigate('/');
       }
       

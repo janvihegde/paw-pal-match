@@ -32,13 +32,10 @@ const AdminLogin = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   
-  const urlParams = new URLSearchParams(window.location.search);
-  const emailFromParams = urlParams.get('email') || "";
-  
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
-      email: emailFromParams || "nnm23cs085@nmamit.in",
+      email: "",
       password: "",
     },
   });
@@ -137,12 +134,6 @@ const AdminLogin = () => {
                 <a href="/login" className="text-sm text-blue-600 hover:underline">
                   User Login
                 </a>
-              </div>
-              
-              <div className="mt-4 p-3 bg-gray-100 rounded-md">
-                <p className="text-sm text-gray-700">
-                  <strong>Note:</strong> For testing, use email: nnm23cs085@nmamit.in with password: 123456
-                </p>
               </div>
             </form>
           </Form>
